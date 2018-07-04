@@ -9,7 +9,7 @@ const DEBUG = true;
 var playState = {
     preload: function () {
         game.load.spritesheet('zombie', 'assets/sprites/zombie.png', 7, 10, 4);
-        game.load.spritesheet('human', 'assets/sprites/human.png', 7, 10, 5);
+        game.load.spritesheet('human', 'assets/sprites/human.png', 7, 10, 13);
     },
 
     create: function () {
@@ -28,10 +28,10 @@ var playState = {
         game.physics.enable(player, Phaser.Physics.ARCADE);
         player.body.collideWorldBounds = true;
         player.anchor.setTo(.5, .5);
-        player.scale.set(8);
+        player.scale.set(10);
         player.animations.add('idle', [0], 1, true);
         player.animations.add('run', [1, 2], 6, true);
-        attackAnimation = player.animations.add('attack', [3, 0, 3], 5, false);
+        attackAnimation = player.animations.add('attack', [0, 3], 5, false);
         // attackAnimation.onComplete.add(function() {
         //     console.log('tee');
         //    player.frame = 0;
@@ -48,12 +48,15 @@ var playState = {
             game.physics.enable(human, Phaser.Physics.ARCADE);
             human.body.collideWorldBounds = true;
             human.anchor.setTo(.5, .5);
-            human.scale.set(8);
+            human.scale.set(10);
             human.animations.add('idle', [0], 2, true);
             human.animations.add('run', [1, 2], 6, true);
             human.animations.add('panic_run', [3, 4], 12, true);
+            human.animations.add('zombie_change', [5, 6, 7, 8, 9, 10], 2, false);
+            human.animations.add('zombie_run', [11, 12], 6, true);
             human.rotatedToLeft = true;
             human.moving = false;
+            human.currentTween = false;
             human.nextMove = 0;
             human.animations.play('idle');
             // randomMove(human);
@@ -89,19 +92,29 @@ var playState = {
     },
 
     update: function () {
+        game.physics.arcade.overlap(player, humans, playerOverlapWithHumans, null, this);
         humans.forEach(function(human) {
-            if (game.physics.arcade.distanceBetween(player, human) < 200 && !human.moving) {
+            if (game.physics.arcade.distanceBetween(player, human) < 200 && !human.moving && !human.locked && !human.isZombie) {
                 human.moving = true;
                 randomMove(human, 400, 'panic_run', 1.5);
                 var delay = randomInt(1000, 7000);
                 human.nextMove = game.time.now + delay;
             }
 
-            if (game.time.now > human.nextMove && !human.moving) {
+            if (game.time.now > human.nextMove && !human.moving && !human.locked) {
                 human.moving = true;
                 var delay = randomInt(1000, 7000);
                 human.nextMove = game.time.now + delay;
-                randomMove(human, 200, 'run', 1);
+                if (!human.isZombie) {
+                    randomMove(human, 200, 'run', 1);
+                } else {
+                    randomMove(human, 200, 'zombie_run', 0.5);
+                }
+            }
+
+            if (human.animations.currentAnim.name === 'zombie_change' && human.animations.currentAnim.isPlaying) {
+                player.animations.play('attack');
+                player.locked = true;
             }
 
         });
@@ -120,12 +133,34 @@ var playState = {
     },
 }
 
+function playerOverlapWithHumans(player, human) {
+    if (attackAnimation.isPlaying && !human.isZombie && !player.locked) {
+        if (human.currentTween) {
+            human.currentTween.stop();
+        }
+        human.moving = false;
+        human.nextMove = game.time.now + 5000;
+        human.isZombie = true;
+        human.body.moves = false;
+        human.locked = true;
+        player.locked = true;
+        human.animations.play('zombie_change').onComplete.add(function() {
+            player.locked = false;
+            human.locked = false;
+        });
+    }
+}
+
 function updateMovement() {
 
     player.body.velocity.x = 0;
     player.body.velocity.y = 0;
     // player.animations.play('idle');
     player.moving = false;
+
+    if (player.locked) {
+        return;
+    }
 
     if (game.input.keyboard.isDown(Phaser.Keyboard.UP)) {
         player.body.velocity.y = -200;
@@ -194,9 +229,16 @@ function randomMove(sprite, offset, animation, speedMultiplier) {
 
         var speed = 200 * speedMultiplier;
         var duration = (Phaser.Point.distance(sprite, {x: x, y: y}) / speed) * 1000;
-    game.add.tween(sprite).to({x: x, y: y}, duration, null, true).onComplete.add(function() {
-        sprite.animations.stop();
-        sprite.frame = 0;
+        sprite.currentTween = game.add.tween(sprite).to({x: x, y: y}, duration, null, true);
+        sprite.currentTween.onComplete.add(function() {
+        if (!sprite.locked) {
+            sprite.animations.stop();
+            if (!sprite.isZombie) {
+                sprite.frame = 0;
+            } else {
+                sprite.frame = 10;
+            }
+        }
         sprite.moving = false;
 
 
