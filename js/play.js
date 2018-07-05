@@ -3,6 +3,7 @@ var enemy;
 var humans;
 var attackAnimation;
 var canAttack = true;
+var humanSprites = ['human', 'human2'];
 
 const DEBUG = true;
 
@@ -10,11 +11,12 @@ var playState = {
     preload: function () {
         game.load.spritesheet('zombie', 'assets/sprites/zombie.png', 7, 10, 4);
         game.load.spritesheet('human', 'assets/sprites/human.png', 7, 10, 13);
+        game.load.spritesheet('human2', 'assets/sprites/human2.png', 7, 10, 13);
     },
 
     create: function () {
 
-        game.stage.backgroundColor = "#70b749";
+        game.stage.backgroundColor = "#a2fc5c";
         game.physics.startSystem(Phaser.Physics.ARCADE);
 
 
@@ -43,7 +45,8 @@ var playState = {
 
         for (var i = 0; i < 5; i++)
         {
-            var human = game.add.sprite(360 + Math.random() * 200, 120 + Math.random() * 200, 'human');
+            var sprite = humanSprites[Math.floor(Math.random()*humanSprites.length)];
+            var human = game.add.sprite(360 + Math.random() * 200, 120 + Math.random() * 200, sprite);
             humans.add(human);
             game.physics.enable(human, Phaser.Physics.ARCADE);
             human.body.collideWorldBounds = true;
@@ -163,13 +166,13 @@ function updateMovement() {
     }
 
     if (game.input.keyboard.isDown(Phaser.Keyboard.UP)) {
-        player.body.velocity.y = -200;
+        player.body.velocity.y = -100;
         player.animations.play('run');
         player.moving = true;
     }
 
     if (game.input.keyboard.isDown(Phaser.Keyboard.DOWN)) {
-        player.body.velocity.y = 200;
+        player.body.velocity.y = 100;
         player.animations.play('run');
         player.moving = true;
     }
@@ -180,7 +183,7 @@ function updateMovement() {
             player.scale.x *= -1;
         }
         player.animations.play('run');
-        player.body.velocity.x = -200;
+        player.body.velocity.x = -100;
         player.moving = true;
 
     }
@@ -191,7 +194,7 @@ function updateMovement() {
             player.scale.x *= -1;
         }
 
-        player.body.velocity.x = 200;
+        player.body.velocity.x = 100;
         player.animations.play('run');
         player.moving = true;
 
