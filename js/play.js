@@ -25,7 +25,7 @@ var playState = {
         //create player
         // var result = this.findObjectsByType('playerStart', map, 'objectsLayer');
 
-        player = game.add.sprite(22, 22, 'zombie');
+        player = game.add.sprite(50, game.world.height/2, 'zombie');
         game.camera.follow(player);
         game.physics.enable(player, Phaser.Physics.ARCADE);
         player.body.collideWorldBounds = true;
@@ -46,7 +46,7 @@ var playState = {
         for (var i = 0; i < 5; i++)
         {
             var sprite = humanSprites[Math.floor(Math.random()*humanSprites.length)];
-            var human = game.add.sprite(360 + Math.random() * 200, 120 + Math.random() * 200, sprite);
+            var human = game.add.sprite(game.world.width - 400 + Math.random() * 200, game.world.height/2 - 100 + Math.random() * 200, sprite);
             humans.add(human);
             game.physics.enable(human, Phaser.Physics.ARCADE);
             human.body.collideWorldBounds = true;
