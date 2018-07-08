@@ -1,4 +1,4 @@
-var game = new Phaser.Game(1500, 800, Phaser.CANVAS, 'game', this, false, false);
+var game = new Phaser.Game(window.innerWidth * window.devicePixelRatio, window.innerHeight * window.devicePixelRatio, Phaser.CANVAS, 'game', this, false, false);
 
 game.state.add('play', playState);
 
